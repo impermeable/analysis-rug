@@ -1,7 +1,9 @@
 ; Waterproof is installed in user-contrib and found automatically by coqc.
+; This branch uses the coq build language, as dune's rocq mode needs
+; `rocq --config`, which Rocq 9.0 does not have.
 ; We load its OCaml plugin explicitly to enable Waterproof vernacular commands.
 
-(rocq.theory
+(coq.theory
  (name RUG.Analysis)
  (package waterproof-analysis)
  (synopsis "Undergraduate real analysis formalized in Waterproof")
@@ -10,6 +12,6 @@
   coq-waterproof.plugin
   rocq-runtime.plugins.ltac
   rocq-runtime.plugins.ltac2)
- (rocqdoc_flags :standard --utf8))
+ (coqdoc_flags :standard --utf8))
 
 (include_subdirs qualified)

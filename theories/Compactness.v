@@ -1180,7 +1180,7 @@ Proof.
     We claim that INR 0 = 0 as (INR0).
     { reflexivity. }
     rewrite INR0 in xlt.
-    exfalso.
+    ltac1:(exfalso).
     Contradiction.
 
   (** Induction step. *)
@@ -1298,7 +1298,7 @@ Proof.
         It holds that
           ∃ x0 : ℝ, K x0 ∧
             (a + INR n0 * (δ / 2) ≤ x0 ∧ x0 < a + INR n0 * (δ / 2) + δ / 2).
-        exfalso.
+        ltac1:(exfalso).
         Contradiction.
 Qed.
 
