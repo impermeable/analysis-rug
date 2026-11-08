@@ -8,9 +8,10 @@
 
 (* begin hide *)
 
-From Stdlib Require Import Reals.Reals.
+Require Import RUG.Analysis.Lib.StdlibReals.
 From Waterproof Require Import Libs.Analysis.ContinuityDomainR.
 Require Export RUG.Analysis.Sequences.
+Require Import RUG.Analysis.Lib.Compactness.
 
 Waterproof Enable Automation RealsAndIntegers.
 Waterproof Enable Automation Intuition.
@@ -75,23 +76,20 @@ Qed.
     both [|f(x) - L| < ε/2] and [|g(x) - M| < ε/2] hold whenever [0 < |x - c| < δ].
     The triangle inequality then gives [|(f + g)(x) - (L + M)| < ε]. *)
 
-(** The function is named [f'] rather than [f]: in Waterproof's natural-language
-    statements a bare [f] resolves to the global [Stdlib.Reals.Rtopology.f], so
-    an applied function argument must avoid that exact identifier. *)
-Lemma functional_limit_sum (f' g : ℝ → ℝ) (c L M : ℝ)
-    (Hf : _limit_ of f' in c is L)
+Lemma functional_limit_sum (f g : ℝ → ℝ) (c L M : ℝ)
+    (Hf : _limit_ of f in c is L)
     (Hg : _limit_ of g in c is M) :
-    _limit_ of (fun x => f' x + g x) in c is (L + M).
+    _limit_ of (fun x => f x + g x) in c is (L + M).
 Proof.
   We need to show that
     ∀ ε > 0, ∃ δ > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ
-    ⇒ |(f' x + g x) - (L + M)| < ε.
+    ⇒ |(f x + g x) - (L + M)| < ε.
   
   Take ε > 0.
   It holds that ε / 2 > 0.
   By Hf it holds that
     ∃ δ1 > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ1
-    ⇒ |f' x - L| < ε / 2
+    ⇒ |f x - L| < ε / 2
   as (Hf').
   
   Obtain such a δ1.
@@ -104,7 +102,7 @@ Proof.
   Choose δ := Rmin δ1 δ2. { Indeed, δ > 0. }
   We need to show that
       ∀ x ∈ ℝ, 0 < |x - c| < δ
-      ⇨ |(f' x + g x) - (L + M)| < ε.
+      ⇨ |(f x + g x) - (L + M)| < ε.
   Take x ∈ ℝ. Assume that 0 < |x - c| < δ.
   
   By Rmin_l it holds that Rmin δ1 δ2 ≤ δ1.
@@ -112,30 +110,30 @@ Proof.
   It holds that 0 < |x - c| < δ1.
   It holds that 0 < |x - c| < δ2.
   
-  By Hf' it holds that |f' x - L| < ε / 2 as (HfL).
+  By Hf' it holds that |f x - L| < ε / 2 as (HfL).
   By Hg' it holds that |g x - M| < ε / 2 as (HgM).
   
   By Rabs_triang, HfL and HgM it holds that &
-    |(f' x - L) + (g x - M)|
-    ≤ |f' x - L| + |g x - M|
+    |(f x - L) + (g x - M)|
+    ≤ |f x - L| + |g x - M|
     < ε.
 
   It holds that
-    (f' x + g x) - (L + M) = (f' x - L) + (g x - M).
+    (f x + g x) - (L + M) = (f x - L) + (g x - M).
 
-  We conclude that |(f' x + g x) - (L + M)| < ε.
+  We conclude that |(f x + g x) - (L + M)| < ε.
 Qed.
 
 (** If [lim_{x→c} f(x) = L] and [lim_{x→c} g(x) = M], then
     [lim_{x→c} (f · g)(x) = L · M]. *)
-Lemma lim_product (f' g : ℝ → ℝ) (c L M : ℝ)
-    (Hf : _limit_ of f' in c is L)
+Lemma lim_product (f g : ℝ → ℝ) (c L M : ℝ)
+    (Hf : _limit_ of f in c is L)
     (Hg : _limit_ of g in c is M) :
-    _limit_ of (fun x => f' x * g x) in c is (L * M).
+    _limit_ of (fun x => f x * g x) in c is (L * M).
 Proof.
   We need to show that
     ∀ ε > 0, ∃ δ > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ
-    ⇒ |(f' x * g x) - (L * M)| < ε.
+    ⇒ |(f x * g x) - (L * M)| < ε.
   
   Take ε > 0.
   It holds that |L| + 1 > 0.
@@ -147,17 +145,17 @@ Proof.
   It holds that ε / (2 * (|M| + 1)) > 0.
   It holds that ε / (2 * (|L| + 1)) > 0.
   
-  (** Near [c], [f'] is bounded:
-      [|f' x - L| < 1] forces [|f' x| < |L| + 1]. *)
+  (** Near [c], [f] is bounded:
+      [|f x - L| < 1] forces [|f x| < |L| + 1]. *)
   It holds that
     ∃ δ0 > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ0
-    ⇒ |f' x - L| < 1
+    ⇒ |f x - L| < 1
   as (Hfbd).
   
   Obtain such a δ0.
   It holds that
     ∃ δ1 > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ1
-    ⇒ |f' x - L| < ε / (2 * (|M| + 1))
+    ⇒ |f x - L| < ε / (2 * (|M| + 1))
   as (HfM).
   
   Obtain such a δ1.
@@ -170,7 +168,7 @@ Proof.
   Choose δ := Rmin δ0 (Rmin δ1 δ2). { Indeed, δ > 0. }
   We need to show that
     ∀ x ∈ ℝ, 0 < |x - c| < δ
-    ⇨ |(f' x * g x) - (L * M)| < ε.
+    ⇨ |(f x * g x) - (L * M)| < ε.
   
   Take x ∈ ℝ. Assume that 0 < |x - c| < δ.
   By Rmin_l it holds that Rmin δ0 (Rmin δ1 δ2) ≤ δ0.
@@ -182,19 +180,19 @@ Proof.
   It holds that 0 < |x - c| < δ1.
   It holds that 0 < |x - c| < δ2.
   
-  By Hfbd it holds that |f' x - L| < 1.
+  By Hfbd it holds that |f x - L| < 1.
   By HfM it holds that
-    |f' x - L| < ε / (2 * (|M| + 1)).
+    |f x - L| < ε / (2 * (|M| + 1)).
   By HgL it holds that
     |g x - M| < ε / (2 * (|L| + 1)).
   
   By Rabs_triang_inv it holds that
-    |f' x| - |L| ≤ |f' x - L|.
+    |f x| - |L| ≤ |f x - L|.
 
-  It holds that |f' x| ≤ |L| + 1.
-  It holds that |f' x| ≥ 0.
+  It holds that |f x| ≤ |L| + 1.
+  It holds that |f x| ≥ 0.
   It holds that |g x - M| ≥ 0.
-  It holds that |f' x - L| ≥ 0.
+  It holds that |f x - L| ≥ 0.
   
   We claim that ∀ A ∈ ℝ,
     (|A| + 1) * (ε / (2 * (|A| + 1))) = ε / 2
@@ -232,51 +230,51 @@ Proof.
     (|M| + 1) * (ε / (2 * (|M| + 1))) = ε / 2.
     
   (** Split the error using
-      [f'·g - L·M = f'·(g - M) + M·(f' - L)]. *)
+      [f·g - L·M = f·(g - M) + M·(f - L)]. *)
   We claim that
-    |(f' x * g x) - (L * M)|
-    ≤ |f' x| * |g x - M| + |M| * |f' x - L|.
+    |(f x * g x) - (L * M)|
+    ≤ |f x| * |g x - M| + |M| * |f x - L|.
   { 
     It holds that
-      (f' x * g x) - (L * M)
-      = f' x * (g x - M) + M * (f' x - L).
+      (f x * g x) - (L * M)
+      = f x * (g x - M) + M * (f x - L).
     It holds that
-      | (f' x * g x) - (L * M) |
-      = | f' x * (g x - M) + M * (f' x - L)|.
+      | (f x * g x) - (L * M) |
+      = | f x * (g x - M) + M * (f x - L)|.
 
     By Rabs_triang it holds that
-      |f' x * (g x - M) + M * (f' x - L)|
-        ≤ |f' x * (g x - M)| + |M * (f' x - L)|.
+      |f x * (g x - M) + M * (f x - L)|
+        ≤ |f x * (g x - M)| + |M * (f x - L)|.
     By Rabs_mult it holds that
-      |f' x * (g x - M)| = |f' x| * |g x - M|.
+      |f x * (g x - M)| = |f x| * |g x - M|.
     By Rabs_mult it holds that
-      |M * (f' x - L)| = |M| * |f' x - L|.
+      |M * (f x - L)| = |M| * |f x - L|.
 
     We conclude that
-      |(f' x * g x) - (L * M)|
-      ≤ |f' x| * |g x - M| + |M| * |f' x - L|.
+      |(f x * g x) - (L * M)|
+      ≤ |f x| * |g x - M| + |M| * |f x - L|.
   }
 
-  We claim that |f' x| * |g x - M| < ε / 2.
+  We claim that |f x| * |g x - M| < ε / 2.
   {
     By Rmult_le_compat_r it holds that
-      |f' x| * |g x - M| 
+      |f x| * |g x - M| 
       ≤ (|L| + 1) * |g x - M|.
     By Rmult_lt_compat_l it holds that
       (|L| + 1) * |g x - M|
       < (|L| + 1) * (ε / (2 * (|L| + 1))).
-    We conclude that |f' x| * |g x - M| < ε / 2.
+    We conclude that |f x| * |g x - M| < ε / 2.
   }
-  We claim that |M| * |f' x - L| ≤ ε / 2.
+  We claim that |M| * |f x - L| ≤ ε / 2.
   {
     By Rmult_le_compat_l it holds that
-      |M| * |f' x - L| ≤ |M| * (ε / (2 * (|M| + 1))).
+      |M| * |f x - L| ≤ |M| * (ε / (2 * (|M| + 1))).
     By Rmult_le_compat_r it holds that
       |M| * (ε / (2 * (|M| + 1))) ≤ (|M| + 1) * (ε / (2 * (|M| + 1))).
-    We conclude that |M| * |f' x - L| ≤ ε / 2.
+    We conclude that |M| * |f x - L| ≤ ε / 2.
   }
   
-  We conclude that |(f' x * g x) - (L * M)| < ε.
+  We conclude that |(f x * g x) - (L * M)| < ε.
 Qed.
 
 (** If [lim_{x→c} f(x) = L] and [lim_{x→c} g(x) = M] with [M ≠ 0], then
@@ -381,38 +379,38 @@ Proof.
     |(/ g x) - (/ M)| < ε.
 Qed.
 
-Lemma lim_quotient (f' g : ℝ → ℝ) (c L M : ℝ) (HM : M ≠ 0)
-    (Hf : _limit_ of f' in c is L)
+Lemma lim_quotient (f g : ℝ → ℝ) (c L M : ℝ) (HM : M ≠ 0)
+    (Hf : _limit_ of f in c is L)
     (Hg : _limit_ of g in c is M) :
-    _limit_ of (fun x => f' x / g x) in c is (L / M).
+    _limit_ of (fun x => f x / g x) in c is (L / M).
 Proof.
   By inv_limit_fun it holds that
     _limit_ of (fun x => / g x) in c is (/ M).
   By lim_product it holds that
-    _limit_ of (fun x => f' x * / g x) in c is (L * / M).
-  We conclude that _limit_ of (fun x => f' x / g x) in c is (L / M).
+    _limit_ of (fun x => f x * / g x) in c is (L * / M).
+  We conclude that _limit_ of (fun x => f x / g x) in c is (L / M).
 Qed.
 
 (** ** Sequential characterization *)
 
 (** Forward direction:
-    if [lim_{x→c} f'(x) = L] and [(aₙ) → c] with [aₙ ≠ c],
-    then [f'(aₙ) → L]. *)
-Lemma functional_limit_imp_seq (f' : ℝ → ℝ) (c L : ℝ) (a : ℕ → ℝ) :
-    _limit_ of f' in c is L →
+    if [lim_{x→c} f(x) = L] and [(aₙ) → c] with [aₙ ≠ c],
+    then [f(aₙ) → L]. *)
+Lemma functional_limit_imp_seq (f : ℝ → ℝ) (c L : ℝ) (a : ℕ → ℝ) :
+    _limit_ of f in c is L →
     (∀ n ∈ ℕ, a n ≠ c) → a ⟶ c →
-    (fun n => f' (a n)) ⟶ L.
+    (fun n => f (a n)) ⟶ L.
 Proof.
-  Assume that _limit_ of f' in c is L as (Hf).
+  Assume that _limit_ of f in c is L as (Hf).
   Assume that ∀ n ∈ ℕ, a n ≠ c as (Hne).
   Assume that a ⟶ c.
   
   We need to show that
-    ∀ ε > 0, ∃ N ∈ ℕ, ∀ n ≥ N, | f' (a n) - L | < ε.
+    ∀ ε > 0, ∃ N ∈ ℕ, ∀ n ≥ N, | f (a n) - L | < ε.
   
   Take ε > 0.
   By Hf it holds that
-    ∃ δ > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ ⇒ |f' x - L| < ε
+    ∃ δ > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ ⇒ |f x - L| < ε
   as (Hd).
   
   Obtain such a δ.
@@ -424,7 +422,7 @@ Proof.
   Obtain such a Nn.
   Choose (Nn). { Indeed, Nn ∈ ℕ. }
   We need to show that
-    ∀ n ≥ Nn, | f' (a n) - L | < ε.
+    ∀ n ≥ Nn, | f (a n) - L | < ε.
   
   Take n ≥ Nn.
   By HN it holds that | a n - c | < δ.
@@ -433,46 +431,154 @@ Proof.
 
   It holds that 0 < | a n - c | < δ.
   
-  By Hd we conclude that | f' (a n) - L | < ε.
+  By Hd we conclude that | f (a n) - L | < ε.
 Qed.
 
 (** [lim_{x→c} f(x) = L] iff for every sequence [(xₙ) → c] with [xₙ ≠ c],
-    [f(xₙ) → L]. The forward direction is [functional_limit_imp_seq]; the
-    backward direction requires building a witness sequence by choosing a
-    counterexample point for each [δ = 1/n], which needs a form of the axiom of
-    (dependent) choice not available in the pure Waterproof fragment, so it is
-    left admitted here. *)
+    [f(xₙ) → L].
+
+    Proof idea: (⇒) is [functional_limit_imp_seq]. (⇐) if the limit were not
+    [L], there would be [ε > 0] such that for every [n] some [aₙ] satisfies
+    [0 < |aₙ - c| < 1/(n+1)] and [|f(aₙ) - L| ≥ ε]. Countable choice turns
+    these into a sequence [aₙ → c] with [aₙ ≠ c], so [f(aₙ) → L], which
+    contradicts [|f(aₙ) - L| ≥ ε]. *)
 Lemma sequential_limit_characterization (f : ℝ → ℝ) (c L : ℝ) :
     (_limit_ of f in c is L) ⇔
     (∀ a : ℕ → ℝ,
       (∀ n ∈ ℕ, a n ≠ c) → a ⟶ c → (fun n => f (a n)) ⟶ L).
 Proof.
-  Admitted.
+  We show both directions.
+  - We need to show that
+      (_limit_ of f in c is L) ⇨
+      (∀ a : ℕ → ℝ,
+        (∀ n ∈ ℕ, a n ≠ c) → a ⟶ c → (fun n => f (a n)) ⟶ L).
+    Assume that _limit_ of f in c is L as (Hf).
+    Take a : ℕ → ℝ.
+    Assume that ∀ n ∈ ℕ, a n ≠ c as (Hne).
+    Assume that a ⟶ c as (Ha).
+    By (functional_limit_imp_seq f c L a Hf Hne Ha) we conclude that
+      (fun n => f (a n)) ⟶ L.
+  - We need to show that
+      (∀ a : ℕ → ℝ,
+        (∀ n ∈ ℕ, a n ≠ c) → a ⟶ c → (fun n => f (a n)) ⟶ L) ⇨
+      (_limit_ of f in c is L).
+    Assume that
+      ∀ a : ℕ → ℝ,
+        (∀ n ∈ ℕ, a n ≠ c) → a ⟶ c → (fun n => f (a n)) ⟶ L
+      as (Hseq).
+    We need to show that
+      ∀ ε > 0, ∃ δ > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ ⇒ |f x - L| < ε.
+    Take ε > 0.
+    We argue by contradiction.
+    Assume that ¬ (∃ δ > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ ⇒ |f x - L| < ε)
+      as (Hno_delta).
+    (** For every [n] there is a point within [1/(n+1)] of [c] where [f] is
+        [ε]-far from [L]. *)
+    We claim that
+      ∀ n : ℕ, ∃ y : ℝ,
+        0 < |y - c| < 1 / (INR n + 1) ∧ |f y - L| ≥ ε
+      as (Hsteps).
+    {
+      Take n : ℕ.
+      We argue by contradiction.
+      Assume that
+        ¬ (∃ y : ℝ, 0 < |y - c| < 1 / (INR n + 1) ∧ |f y - L| ≥ ε)
+        as (Hno_y).
+      It suffices to show that
+        ∃ δ > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ ⇒ |f x - L| < ε.
+      Choose δ := 1 / (INR n + 1).
+      - Indeed, δ > 0.
+      - We need to show that
+          ∀ x ∈ ℝ, 0 < |x - c| < 1 / (INR n + 1) ⇒ |f x - L| < ε.
+        Take x ∈ ℝ.
+        Assume that 0 < |x - c| < 1 / (INR n + 1) as (Hx).
+        We argue by contradiction.
+        Assume that ¬ (|f x - L| < ε) as (Hfar).
+        It holds that |f x - L| ≥ ε as (Hfar').
+        We claim that
+          ∃ y : ℝ, 0 < |y - c| < 1 / (INR n + 1) ∧ |f y - L| ≥ ε
+          as (Hy).
+        {
+          Choose y := x.
+          We conclude that 0 < |y - c| < 1 / (INR n + 1) ∧ |f y - L| ≥ ε.
+        }
+        Contradiction.
+    }
+    By (countable_choice
+        (fun n y => 0 < |y - c| < 1 / (INR n + 1) ∧ |f y - L| ≥ ε) Hsteps)
+      it holds that
+      ∃ a : ℕ → ℝ, ∀ n : ℕ,
+        0 < |a n - c| < 1 / (INR n + 1) ∧ |f (a n) - L| ≥ ε
+      as (Ha_ex).
+    Obtain a according to (Ha_ex).
+    It holds that
+      ∀ n : ℕ, 0 < |a n - c| < 1 / (INR n + 1) ∧ |f (a n) - L| ≥ ε
+      as (Ha).
+    We claim that ∀ n ∈ ℕ, a n ≠ c as (Hne).
+    {
+      Take n ∈ ℕ.
+      Use n0 := n in (Ha).
+      It holds that 0 < |a n - c| < 1 / (INR n + 1) ∧ |f (a n) - L| ≥ ε.
+      It holds that |a n - c| > 0.
+      We conclude that a n ≠ c.
+    }
+    We claim that a ⟶ c as (Hconv).
+    {
+      We need to show that ∀ ε0 > 0, ∃ N1 ∈ ℕ, ∀ n ≥ N1, |a n - c| < ε0.
+      Take ε0 > 0.
+      By the Archimedean property it holds that
+        ∃ n1 ∈ ℕ, n1 > / ε0 as (Arch_N).
+      Obtain such an n1. Choose N1 := n1. { Indeed, N1 ∈ ℕ. }
+      We need to show that ∀ n ≥ N1, |a n - c| < ε0.
+      By Arch_N it holds that INR N1 > / ε0 as (H_arch_bound).
+      Take n ≥ N1.
+      It holds that n >= N1 as (Order_N).
+      By Order_N it holds that INR n >= INR N1 as (H_real_order).
+      By H_real_order and H_arch_bound it holds that
+        INR n + 1 > / ε0 as (H_inv_bound).
+      By H_inv_bound it holds that 1 / (INR n + 1) < ε0.
+      Use n0 := n in (Ha).
+      It holds that
+        0 < |a n - c| < 1 / (INR n + 1) ∧ |f (a n) - L| ≥ ε as (Ha_n).
+      By Ha_n it holds that |a n - c| < 1 / (INR n + 1).
+      We conclude that (& |a n - c| < 1 / (INR n + 1) < ε0).
+    }
+    By (Hseq a Hne Hconv) it holds that (fun n => f (a n)) ⟶ L as (Hfa).
+    By Hfa it holds that
+      ∃ N1 ∈ ℕ, ∀ n ≥ N1, |f (a n) - L| < ε as (HN).
+    Obtain such an N1.
+    It holds that |f (a N1) - L| < ε as (Hclose).
+    Use n := N1 in (Ha).
+    It holds that
+      0 < |a N1 - c| < 1 / (INR N1 + 1) ∧ |f (a N1) - L| ≥ ε.
+    It holds that |f (a N1) - L| ≥ ε.
+    Contradiction.
+Qed.
 
 (** ** Divergence criterion *)
 
 (** If two sequences approaching [c] give different limits for [f], then
     [lim_{x→c} f(x)] does not exist. *)
-Lemma divergence_criterion (f' : ℝ → ℝ) (c : ℝ)
+Lemma divergence_criterion (f : ℝ → ℝ) (c : ℝ)
     (a b : ℕ → ℝ) (L M : ℝ) (HLM : L ≠ M)
     (Ha_ne : ∀ n ∈ ℕ, a n ≠ c) (Ha : a ⟶ c)
     (Hb_ne : ∀ n ∈ ℕ, b n ≠ c) (Hb : b ⟶ c)
-    (Hfa : (fun n => f' (a n)) ⟶ L)
-    (Hfb : (fun n => f' (b n)) ⟶ M) :
-    ¬ (∃ L' : ℝ, _limit_ of f' in c is L').
+    (Hfa : (fun n => f (a n)) ⟶ L)
+    (Hfb : (fun n => f (b n)) ⟶ M) :
+    ¬ (∃ L' : ℝ, _limit_ of f in c is L').
 Proof.
   We argue by contradiction.
-  Assume that ¬ ¬ (∃ L', _limit_ of f' in c is L').
-  It holds that ∃ L' : ℝ, _limit_ of f' in c is L'.
+  Assume that ¬ ¬ (∃ L', _limit_ of f in c is L').
+  It holds that ∃ L' : ℝ, _limit_ of f in c is L'.
   
   Obtain such a L'.
   By functional_limit_imp_seq it holds that
-    (fun n => f' (a n)) ⟶ L'.
+    (fun n => f (a n)) ⟶ L'.
   By functional_limit_imp_seq it holds that
-    (fun n => f' (b n)) ⟶ L'.
+    (fun n => f (b n)) ⟶ L'.
 
-  By limit_unique (fun n => f' (a n)) L L' it holds that L = L'.
-  By limit_unique (fun n => f' (b n)) M L' it holds that M = L'.
+  By limit_unique (fun n => f (a n)) L L' it holds that L = L'.
+  By limit_unique (fun n => f (b n)) M L' it holds that M = L'.
   It holds that L = M.
   Contradiction.
 Qed.
@@ -512,5 +618,6 @@ Lemma limit_epsilon_delta (f : ℝ → ℝ) (c L : ℝ)
 Proof.
   (** This is precisely the definition of [limit_in_point], so the hypothesis
       [Hf] discharges the goal directly. Can you prove it step by step? *)
-  exact Hf.
+  By Hf we conclude that
+    ∀ ε > 0, ∃ δ > 0, ∀ x ∈ ℝ, 0 < |x - c| < δ ⇒ |f x - L| < ε.
 Qed.

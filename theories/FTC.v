@@ -6,7 +6,7 @@
   supremum, order property, [|∫f| ≤ ∫|f|]), the oriented integral, the two
   parts of the fundamental theorem, and integration by parts. *)
 
-From Stdlib Require Import Reals.Reals.
+Require Import RUG.Analysis.Lib.StdlibReals.
 Require Export RUG.Analysis.Integration.
 Require Export RUG.Analysis.Derivatives.
 
@@ -27,16 +27,18 @@ Set Bullet Behavior "Waterproof Relaxed Subproofs".
     Proof idea: on every partition each cell's supremum is at most [M], so every
     upper sum is at most [(b - a)·M]; the integral is the infimum of the upper
     sums. *)
-(* [f] renamed to [f1]: a bare [f] resolves to [Stdlib.Reals.Rtopology.f]. *)
-Lemma integral_bound_sup (f1 : ℝ → ℝ) (a b M : ℝ) (Hab : a ≤ b)
-    (prf : Riemann_integrable f1 a b)
-    (HM : ∀ x : ℝ, a ≤ x ∧ x ≤ b → f1 x ≤ M) :
+Lemma integral_bound_sup (f : ℝ → ℝ) (a b M : ℝ) (Hab : a ≤ b)
+    (prf : Riemann_integrable f a b)
+    (HM : ∀ x : ℝ, a ≤ x ∧ x ≤ b → f x ≤ M) :
     RiemannInt prf ≤ (b - a) * M.
 Proof.
-  (* Compare with the constant function [M] and evaluate its integral. *)
-  pose (prc := RiemannInt_P14 a b M).
+  (** Compare with the constant function [M] and evaluate its integral. The
+      comparison is an inequality of [RiemannInt] terms, on which Waterproof
+      automation does not finish within minutes (even with the lemma fully
+      applied), so it is done with [apply]/[exact]. *)
+  Define prc := (RiemannInt_P14 a b M).
   apply (Rle_trans (RiemannInt prf) (RiemannInt prc) ((b - a) * M)).
-  - exact (integral_monotone f1 (fct_cte M) a b Hab prf prc HM).
+  - exact (integral_monotone f (fct_cte M) a b Hab prf prc HM).
   - rewrite (RiemannInt_P15 prc).
     We conclude that M * (b - a) ≤ (b - a) * M.
 Qed.
@@ -46,14 +48,15 @@ Qed.
 (** _Order property_: if [f ≤ g] on [[a, b]] then [∫_a^b f ≤ ∫_a^b g]. (This is
     [integral_monotone] from [Analysis.Integration], restated as the order form
     of Lecture 15.) *)
-(* [f] renamed to [f1]: a bare [f] resolves to [Stdlib.Reals.Rtopology.f]. *)
-Lemma integral_order (f1 g : ℝ → ℝ) (a b : ℝ) (Hab : a ≤ b)
-    (prf : Riemann_integrable f1 a b)
+Lemma integral_order (f g : ℝ → ℝ) (a b : ℝ) (Hab : a ≤ b)
+    (prf : Riemann_integrable f a b)
     (prg : Riemann_integrable g a b)
-    (Hle : ∀ x : ℝ, a ≤ x ∧ x ≤ b → f1 x ≤ g x) :
+    (Hle : ∀ x : ℝ, a ≤ x ∧ x ≤ b → f x ≤ g x) :
     RiemannInt prf ≤ RiemannInt prg.
 Proof.
-  exact (integral_monotone f1 g a b Hab prf prg Hle).
+  (** [By integral_monotone we conclude that …] does not finish within
+      minutes on this [RiemannInt] goal, so we give the proof term directly. *)
+  exact (integral_monotone f g a b Hab prf prg Hle).
 Qed.
 
 (** _Triangle inequality for integrals_: [|f|] is integrable and
@@ -61,12 +64,15 @@ Qed.
 
     Proof idea: [-|f| ≤ f ≤ |f|]; integrating and using the order property gives
     [-∫|f| ≤ ∫f ≤ ∫|f|], i.e. [|∫f| ≤ ∫|f|]. *)
-Lemma integral_abs_le (f1 : ℝ → ℝ) (a b : ℝ) (Hab : a ≤ b)
-    (prf : Riemann_integrable f1 a b) :
-    ∃ prabs : Riemann_integrable (fun x => Rabs (f1 x)) a b,
+Lemma integral_abs_le (f : ℝ → ℝ) (a b : ℝ) (Hab : a ≤ b)
+    (prf : Riemann_integrable f a b) :
+    ∃ prabs : Riemann_integrable (fun x => Rabs (f x)) a b,
       Rabs (RiemannInt prf) ≤ RiemannInt prabs.
 Proof.
-  (* [RiemannInt_P16] gives integrability of [|f|], [RiemannInt_P17] the bound. *)
+  (** [RiemannInt_P16] gives integrability of [|f|], [RiemannInt_P17] the
+      bound. The bound is a [RiemannInt] inequality, on which Waterproof
+      automation does not finish within minutes, so we give the proof term
+      directly. *)
   Choose prabs := (RiemannInt_P16 prf).
   exact (RiemannInt_P17 prf (RiemannInt_P16 prf) Hab).
 Qed.
@@ -85,13 +91,15 @@ Definition RiemannInt_oriented (f : ℝ → ℝ) (a b : ℝ)
 (** _Chasles / additivity_: if [f] is integrable on [[a,b]], [[b,c]] and
     [[a,c]], then [∫_a^b f + ∫_b^c f = ∫_a^c f], regardless of the ordering of
     [a], [b], [c]. *)
-Lemma integral_additive (f1 : ℝ → ℝ) (a b c : ℝ)
-    (pr1 : Riemann_integrable f1 a b)
-    (pr2 : Riemann_integrable f1 b c)
-    (pr3 : Riemann_integrable f1 a c) :
+Lemma integral_additive (f : ℝ → ℝ) (a b c : ℝ)
+    (pr1 : Riemann_integrable f a b)
+    (pr2 : Riemann_integrable f b c)
+    (pr3 : Riemann_integrable f a c) :
     RiemannInt pr3 = RiemannInt pr1 + RiemannInt pr2.
 Proof.
-  (* Stdlib's Chasles relation. *)
+  (** Stdlib's Chasles relation. Waterproof automation does not finish within
+      minutes on this [RiemannInt] equality, so we use [symmetry] and the
+      proof term. *)
   symmetry.
   exact (RiemannInt_P26 pr1 pr2 pr3).
 Qed.

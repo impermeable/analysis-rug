@@ -7,7 +7,7 @@
 
 (* begin hide *)
 
-From Stdlib Require Import Reals.Reals.
+Require Import RUG.Analysis.Lib.StdlibReals.
 
 From Waterproof Require Export Libs.Analysis.Sequences.
 Require Export RUG.Analysis.Reals.
@@ -49,16 +49,15 @@ Qed.
 Lemma le_succ_cases (n N1 : ℕ) :
   n ≤ S N1 -> n = S N1 \/ n ≤ N1.
 Proof.
-Assume that n ≤ S N1.
-(** I'd like to do
-   [By (Nat.eq_dec n (S N1)) it holds that n = S N1 ∨ n ≠ S N1].
-   but it is not working, so I do it manually. *)
-destruct (Nat.eq_dec n (S N1)) as [Heq | Hneq].
-- left. We conclude that n = S N1.
-- right.
-  It holds that (n ≤ S N1)%nat.
-  It holds that (n ≤ N1)%nat.
-  We conclude that n ≤ N1.
+  Assume that n ≤ S N1.
+  Either (n = S N1)%nat or (n ≠ S N1)%nat.
+  - Case (n = S N1)%nat.
+    We conclude that n = S N1 ∨ n ≤ N1.
+  - Case (n ≠ S N1)%nat.
+    It holds that (n ≤ S N1)%nat.
+    It holds that (n ≤ N1)%nat.
+    It holds that n ≤ N1.
+    We conclude that n = S N1 ∨ n ≤ N1.
 Qed.
 
 (** This computes the maximum of the absolute values
@@ -142,10 +141,10 @@ Proof.
      [By lim_const_seq we conclude that (fun _ : ℕ => c) ⟶ c.]*)
   Define s := constant_seq c.
   We need to show
-    ∀ ε > 0, ∃ N1 ∈ ℕ, ∀ n ≥ N1, ｜s(n) - c｜ < ε.
+    ∀ ε > 0, ∃ N1 ∈ ℕ, ∀ n ≥ N1, |s(n) - c| < ε.
   Take ε > 0. Choose N1 := O. { Indeed, N1 ∈ ℕ. }
 
-  We need to show that ∀ n ≥ N1, ｜s(n) - c｜ < ε.
+  We need to show that ∀ n ≥ N1, |s(n) - c| < ε.
   Take n ≥ N1.
   It holds that s n = c.
   We conclude that (&
@@ -165,11 +164,11 @@ Proof.
       [By lim_d_0 we conclude that (fun n : ℕ => Rdiv 1 (INR n + 1)) ⟶ 0.]
       The proof below is an adaptation of the proof in Waterproof. *)
   We need to show
-      ∀ ε > 0, ∃ N1 ∈ ℕ, ∀ n ≥ N1, ｜harmonic(n) - 0｜ < ε.
+      ∀ ε > 0, ∃ N1 ∈ ℕ, ∀ n ≥ N1, |harmonic(n) - 0| < ε.
   Take ε > 0.
   By the Archimedean property it holds that ∃ n1 ∈ ℕ, n1 > / ε.
   Obtain such an n1. Choose N1 := n1. { Indeed, N1 ∈ ℕ. }
-  We need to show that ∀ n ≥ N1, ｜harmonic(n) - 0｜ < ε.
+  We need to show that ∀ n ≥ N1, |harmonic(n) - 0| < ε.
 
   Take n ≥ N1.
   We need to show that Rabs (1 / (n + 1) - 0) < ε.
@@ -692,50 +691,5 @@ Proof.
     | L1 - L2 | ≤ | L1 - a n | + | a n - L2 |.
   It holds that | L1 - a n | = | a n - L1 |.
   It holds that | L1 - L2 | < | L1 - L2 |.
-  Contradiction.
-Qed.
-
-(** ** A divergent sequence *)
-
-(** _Divergent sequences_ example: the alternating sequence [(-1)ⁿ] does not converge.
-
-    Proof idea: suppose [aₙ → L]. Taking [ε = 1], there is an [N] beyond which
-    [|aₙ - L| < 1]. But for even [n] we have [aₙ = 1] and for odd [n] we have
-    [aₙ = -1], so both [|1 - L| < 1] and [|-1 - L| < 1] would hold. By the
-    triangle inequality [2 = |1 - (-1)| ≤ |1 - L| + |L - (-1)| < 2], a
-    contradiction. *)
-Lemma pm_1_diverges : ¬ (∃ L ∈ ℝ, (fun n => (-1) ^ n) ⟶ L).
-Proof.
-  (** Due to ¬ we are already in a contradiction-like setting *)
-  Assume that ∃ L ∈ ℝ, (fun n ↦ (-1)^n) ⟶ L as (H).
-  Obtain such an L.
-  It holds that (1 > 0).
-  By H it holds that ∃ N1 ∈ ℕ, ∀ n ≥ N1, | (-1)^n - L | < 1 as (HN).
-  Obtain such an N1.
-
-  (** Even case: [n = 2*N1] *)
-  It holds that (2 * N1)%nat ≥ N1.
-  By HN it holds that (| (-1)^(2 * N1) - L | < 1).
-  By pow_1_even it holds that ((-1)^(2 * N1) = 1).
-  It holds that (| 1 - L | < 1).
-
-  By Rabs_def2 it holds that (1 - L < 1 ∧ -1 < 1 - L).
-  - It holds that (1 - L < 1).
-  - It holds that (-1 < 1 - L).
-
-  (** Odd case: [n = 2*N1+1] *)
-  It holds that (S (2 * N1)%nat ≥ N1).
-  By HN it holds that (| (-1)^(S(2 * N1)%nat) - L | < 1).
-  (** Without the following line it gets very slow *)
-  By pow_1_odd it holds that ((-1)^(S (2 * N1)%nat) = - 1).
-  It holds that (| -1 - L | < 1).
-
-  By Rabs_def2 it holds that (-1 - L < 1 ∧ -1 < -1 - L).
-  - It holds that (-1 - L < 1).
-  - It holds that (-1 < -1 - L).
-
-  (** Contradiction: [1 - L < 1  ⇨  L > 0] and [-1 < -1 - L  ⇨  L < 0] *)
-  Since (1 - L < 1) ∧ (-1 < -1 - L) it holds that
-    (0 < L ∧ L < 0).
   Contradiction.
 Qed.

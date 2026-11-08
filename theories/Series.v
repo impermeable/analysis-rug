@@ -11,7 +11,7 @@
   [Analysis.Subsequences]) and reused here. *)
 
 (* begin hide *)
-From Stdlib Require Import Reals.Reals.
+Require Import RUG.Analysis.Lib.StdlibReals.
 From Waterproof Require Import Libs.Analysis.Series.
 Require Export RUG.Analysis.CauchySequences.
 
@@ -208,16 +208,9 @@ Proof.
 
     We claim that partial_sums (sprod a c) ⟶ (c * A) as (Hfin).
     {
-      (** I could not figure out how to formalize this step in Waterproof yet. *)
-      apply eq_seq_conv_to_same_lim with
-        (a := sprod (partial_sums a) c)
-        (b := partial_sums (sprod a c))
-        (l := c * A).
-      {
-        By HComm we conclude that
-          ∀ n ∈ ℕ, sprod (partial_sums a) c n = partial_sums (sprod a c) n.
-      }
-      By HSc we conclude that sprod (partial_sums a) c ⟶ (c * A).
+      By (eq_seq_conv_to_same_lim (sprod (partial_sums a) c)
+          (partial_sums (sprod a c)) (c * A) HComm HSc)
+        we conclude that partial_sums (sprod a c) ⟶ (c * A).
     }
 
     By Hfin we conclude that partial_sums (sprod a c)  ⟶ (c * A).
@@ -240,15 +233,20 @@ Proof.
 
     We claim that partial_sums (ssum a b) ⟶ (A + B).
     {
-      apply eq_seq_conv_to_same_lim with
-        (a:= ssum (partial_sums a) (partial_sums b))
-        (b:= partial_sums (ssum a b))
-        (l:= A + B).
+      We claim that ∀ n ∈ ℕ,
+        ssum (partial_sums a) (partial_sums b) n = partial_sums (ssum a b) n
+        as (Hpt3).
       {
         By Hpt2 we conclude that ∀ n ∈ ℕ,
           ssum (partial_sums a) (partial_sums b) n = partial_sums (ssum a b) n.
       }
-      We conclude that ssum (partial_sums a) (partial_sums b) ⟶ (A + B).
+      We claim that ssum (partial_sums a) (partial_sums b) ⟶ (A + B) as (Hconv).
+      {
+        We conclude that ssum (partial_sums a) (partial_sums b) ⟶ (A + B).
+      }
+      By (eq_seq_conv_to_same_lim (ssum (partial_sums a) (partial_sums b))
+          (partial_sums (ssum a b)) (A + B) Hpt3 Hconv)
+        we conclude that partial_sums (ssum a b) ⟶ (A + B).
     }
     We conclude that (partial_sums (ssum a b)) ⟶ (A + B).
 Qed.
@@ -495,11 +493,13 @@ Proof.
   (* [alternated_series] provides the limit of the partial sums of [tg_alt b]. *)
   We claim that ∃ l : ℝ, Un_cv (partial_sums (fun n ↦ ((-1) ^ n) * b n)) l.
   {
-    (* TODO: raw Rocq — [alternated_series] returns a [{l | Un_cv …}] sig that
-       we repackage as a plain existential; [tg_alt b] is convertible with our
-       summand. Revisit to Waterproof-ify. *)
+    (** [alternated_series] returns a [sig] (a [Type]), not an [∃] (a [Prop]).
+        Waterproof's [Obtain] only unpacks [∃], so the witness is extracted
+        with [destruct]. [tg_alt b] is convertible with our summand. *)
     destruct (alternated_series b Hdec Hcv0) as [l Hl].
-    exists l. exact Hl.
+    Choose l1 := l.
+    By Hl we conclude that
+      Un_cv (partial_sums (fun n ↦ ((-1) ^ n) * b n)) l1.
   }
   Obtain such a l.
   It holds that Un_cv (partial_sums (fun n ↦ ((-1) ^ n) * b n)) l.
@@ -526,7 +526,6 @@ Lemma geometric_series (r : ℝ) (Hr : |r| < 1) :
 Proof.
   (* [GP_infinite] gives [Un_cv (sum_f_R0 (fun n ↦ 1 * r ^ n)) (/ (1 - r))]. *)
   By GP_infinite it holds that Pser (fun _ : ℕ ↦ 1) r (/ (1 - r)) as (Hgp).
-  unfold Pser, infinite_sum in Hgp.
   We claim that partial_sums (fun n ↦ r ^ n) ⟶ (/ (1 - r)).
   {
     We need to show that ∀ ε > 0, ∃ N1 ∈ ℕ, ∀ n ≥ N1,
@@ -633,18 +632,10 @@ Proof.
       By Htel we conclude that
         (constant_sequence (b 0%nat) n - b (n + 1)%nat) = ps n.
     }
-    (* TODO: raw Rocq — [eq_seq_conv_to_same_lim] transports convergence along a
-       pointwise-equal sequence; same idiom as [series_algebraic_limit] above.
-       Would like a pure Waterproof phrasing later. *)
-    apply eq_seq_conv_to_same_lim with
-      (a := fun m ↦ constant_sequence (b 0%nat) m - b (m + 1)%nat)
-      (b := ps)
-      (l := b 0%nat - L).
-    { By Heqseq we conclude that ∀ n ∈ ℕ,
-        constant_sequence(b(0%nat), n) -b((n + 1)%nat) = ps(n). }
-    By Hdiff we conclude that
-      (fun m ↦ constant_sequence (b 0%nat) m - b (m + 1)%nat)
-      ⟶ (b 0%nat - L).
+    By (eq_seq_conv_to_same_lim
+        (fun m ↦ constant_sequence (b 0%nat) m - b (m + 1)%nat) ps
+        (b 0%nat - L) Heqseq Hdiff)
+      we conclude that ps ⟶ (b 0%nat - L).
 Qed.
 
 (** ** The nth-term test for divergence *)
@@ -686,9 +677,9 @@ Proof.
   We claim that / x - / (x + 1) = / x * / (x + 1).
   {
     We claim that / x * ((x + 1) * / (x + 1)) = / x.
-    { rewrite Ex1. We conclude that / x * 1 = / x. }
+    { By Ex1 we conclude that / x * ((x + 1) * / (x + 1)) = / x. }
     We claim that / (x + 1) * (x * / x) = / (x + 1).
-    { rewrite Ex. We conclude that / (x + 1) * 1 = / (x + 1). }
+    { By Ex we conclude that / (x + 1) * (x * / x) = / (x + 1). }
     We conclude that / x - / (x + 1) = / x * / (x + 1).
   }
   By Rinv_mult it holds that / (x * (x + 1)) = / x * / (x + 1).
@@ -734,15 +725,14 @@ Proof.
       We need to show that
         partial_sums ｛ k : ℕ | 1 / (k + 1) ^ 2 ｝ (n + 1)
           ≤ 2 - 1 / ((n + 1)%nat + 1).
-      rewrite Nat.add_1_r.
-      By Nat.add_1_r it suffices to show that
-        partial_sums ｛ k : ℕ | 1 / (k + 1) ^ 2 ｝ (S(n))
-          ≤ 2 - 1 / (S(n) + 1).
-
+      (** Rocq's [n + 1] does not reduce to [S n], so we relate them
+          explicitly. *)
+      It holds that (n + 1)%nat = S n as (Hsucc).
+      By Hsucc it holds that
+        partial_sums (fun k => 1 / (INR k + 1) ^ 2) (Nat.add n 1)
+        = partial_sums (fun k => 1 / (INR k + 1) ^ 2) (S n).
       By S_INR it holds that INR (S n) = INR n + 1 as (HI).
-      By HI it suffices to show that
-        partial_sums ｛ k : ℕ | 1 / (k + 1) ^ 2 ｝ (S(n))
-          ≤ 2 - 1 / (n + 1 + 1).
+      By Hsucc it holds that INR (n + 1)%nat = INR n + 1.
 
       It holds that
         partial_sums (fun k => 1 / (INR k + 1) ^ 2) (S n)
@@ -760,8 +750,11 @@ Proof.
       By inv_sq_telescope it holds that
         1 / (INR n + 1 + 1) ^ 2 ≤ 1 / (INR n + 1) - 1 / (INR n + 1 + 1).
 
-      We conclude that
+      It holds that
         partial_sums (fun k => 1 / (INR k + 1) ^ 2) (S n) ≤ 2 - 1 / (INR n + 1 + 1).
+      We conclude that
+        partial_sums (fun k => 1 / (INR k + 1) ^ 2) (Nat.add n 1)
+          ≤ 2 - 1 / (INR (n + 1)%nat + 1).
   }
 
   (* Nonnegative terms, so the partial sums are nondecreasing. *)
@@ -986,14 +979,171 @@ Proof.
   Contradiction.
 Qed.
 
+(** For [p ≥ 0], a block of [q] consecutive terms of [∑ 1/(k+1)ᵖ] after index
+    [n] is at most [q] times its first term [1/(n+2)ᵖ].
+
+    Proof idea: induction on [q]; each new term [1/(n+q+2)ᵖ] is at most
+    [1/(n+2)ᵖ] because [x ↦ xᵖ] is nondecreasing for [p ≥ 0]. *)
+Lemma p_series_block (p : ℝ) (Hp : 0 ≤ p) :
+    ∀ n : ℕ, ∀ q : ℕ,
+      partial_sums (fun k => 1 / Rpower (INR k + 1) p) (Nat.add n q)
+        - partial_sums (fun k => 1 / Rpower (INR k + 1) p) n
+      ≤ INR q * (1 / Rpower (INR n + 1 + 1) p).
+Proof.
+  Take n : ℕ.
+  We use induction on q.
+  + We first show the base case
+      partial_sums (fun k => 1 / Rpower (INR k + 1) p) (Nat.add n 0)
+        - partial_sums (fun k => 1 / Rpower (INR k + 1) p) n
+      ≤ INR 0 * (1 / Rpower (INR n + 1 + 1) p).
+    It holds that (n + 0)%nat = n.
+    It holds that INR 0%nat = 0.
+    We conclude that
+      partial_sums (fun k => 1 / Rpower (INR k + 1) p) (Nat.add n 0)
+        - partial_sums (fun k => 1 / Rpower (INR k + 1) p) n
+      ≤ INR 0 * (1 / Rpower (INR n + 1 + 1) p).
+  + We now show the induction step.
+    Take q : ℕ.
+    Assume that
+      partial_sums (fun k => 1 / Rpower (INR k + 1) p) (Nat.add n q)
+        - partial_sums (fun k => 1 / Rpower (INR k + 1) p) n
+      ≤ INR q * (1 / Rpower (INR n + 1 + 1) p) as (IH).
+    It holds that (n + (q + 1))%nat = S (n + q)%nat.
+    It suffices to show that
+      partial_sums (fun k => 1 / Rpower (INR k + 1) p) (S (n + q)%nat)
+        - partial_sums (fun k => 1 / Rpower (INR k + 1) p) n
+      ≤ INR (q + 1)%nat * (1 / Rpower (INR n + 1 + 1) p).
+    It holds that
+      partial_sums (fun k => 1 / Rpower (INR k + 1) p) (S (n + q)%nat)
+      = partial_sums (fun k => 1 / Rpower (INR k + 1) p) (Nat.add n q)
+        + 1 / Rpower (INR (S (n + q)%nat) + 1) p as (Hrec).
+    By S_INR it holds that INR (S (n + q)%nat) = INR (n + q)%nat + 1.
+    By plus_INR it holds that INR (n + q)%nat = INR n + INR q.
+    By pos_INR it holds that 0 ≤ INR q.
+    By pos_INR it holds that 0 ≤ INR n.
+    It holds that 0 < INR n + 1 + 1.
+    It holds that INR n + 1 + 1 ≤ INR (S (n + q)%nat) + 1 as (Hbase).
+    By (Rle_Rpower_l (INR n + 1 + 1) (INR (S (n + q)%nat) + 1) p) it holds that
+      Rpower (INR n + 1 + 1) p ≤ Rpower (INR (S (n + q)%nat) + 1) p
+      as (Hmono).
+    By (Rpower_pos (INR n + 1 + 1) p) it holds that
+      0 < Rpower (INR n + 1 + 1) p as (Hpos).
+    By Rinv_le_contravar it holds that
+      / Rpower (INR (S (n + q)%nat) + 1) p ≤ / Rpower (INR n + 1 + 1) p.
+    It holds that
+      1 / Rpower (INR (S (n + q)%nat) + 1) p ≤ 1 / Rpower (INR n + 1 + 1) p
+      as (Hterm).
+    By plus_INR it holds that INR (q + 1)%nat = INR q + INR 1%nat.
+    It holds that INR 1%nat = 1.
+    It holds that INR (q + 1)%nat = INR q + 1 as (Hq1).
+    It holds that
+      INR (q + 1)%nat * (1 / Rpower (INR n + 1 + 1) p)
+      = INR q * (1 / Rpower (INR n + 1 + 1) p)
+        + 1 / Rpower (INR n + 1 + 1) p.
+    It holds that
+      partial_sums (fun k => 1 / Rpower (INR k + 1) p) (Nat.add n q)
+        - partial_sums (fun k => 1 / Rpower (INR k + 1) p) n
+      ≤ INR q * (1 / Rpower (INR n + 1 + 1) p).
+    We conclude that
+      partial_sums (fun k => 1 / Rpower (INR k + 1) p) (S (n + q)%nat)
+        - partial_sums (fun k => 1 / Rpower (INR k + 1) p) n
+      ≤ INR (q + 1)%nat * (1 / Rpower (INR n + 1 + 1) p).
+Qed.
+
+(** For [p > 1] the p-series converges.
+
+    Proof idea (Cauchy condensation): by [p_series_block], the terms with
+    [k + 1 ∈ [[2ʲ, 2ʲ⁺¹)]] add up to at most [2ʲ · 2^{-jp} = (2^{1-p})ʲ], so
+    the partial sums are bounded by the geometric series [∑ (2^{1-p})ʲ], which
+    converges as [2^{1-p} < 1]. Monotone convergence then gives the limit.
+
+    Left admitted: dealing with ([2^{m+1} - 2]) makes the Waterproof automation
+    time out, so it is postponed to a future update. *)
+Lemma p_series_converges (p : ℝ) (Hp : p > 1) :
+    ∃ L : ℝ, partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ L.
+Proof.
+  Admitted.
+
+(** For [p ≤ 1] the p-series diverges.
+
+    Proof idea: [(k+1)ᵖ ≤ k + 1], so [1/(k+1) ≤ 1/(k+1)ᵖ], and convergence
+    would force the harmonic series to converge by [series_comparison_test],
+    contradicting [harmonic_series_diverges]. *)
+Lemma p_series_diverges (p : ℝ) (Hp : p ≤ 1) :
+    ¬ (∃ L : ℝ, partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ L).
+Proof.
+  Assume that ∃ L : ℝ, partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ L
+    as (Hcv).
+  Obtain L according to (Hcv).
+  It holds that partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ L as (HL).
+  (** Comparison with the harmonic series: [1/(k+1) ≤ 1/(k+1)ᵖ]. *)
+  We claim that ∀ n ∈ ℕ, 0 ≤ 1 / (INR n + 1) as (Hpos).
+  {
+    Take n ∈ ℕ.
+    By pos_INR it holds that 0 ≤ INR n.
+    It holds that 0 < / (INR n + 1).
+    We conclude that 0 ≤ 1 / (INR n + 1).
+  }
+  We claim that ∀ n ∈ ℕ, 1 / (INR n + 1) ≤ 1 / Rpower (INR n + 1) p
+    as (Hcomp).
+  {
+    Take n ∈ ℕ.
+    By pos_INR it holds that 0 ≤ INR n.
+    It holds that 1 ≤ INR n + 1 as (Hbase).
+    By (Rle_Rpower (INR n + 1) p 1 Hbase Hp) it holds that
+      Rpower (INR n + 1) p ≤ Rpower (INR n + 1) 1.
+    It holds that 0 < INR n + 1 as (Hbase_pos).
+    By (Rpower_1 (INR n + 1) Hbase_pos) it holds that
+      Rpower (INR n + 1) 1 = INR n + 1.
+    By (Rpower_pos (INR n + 1) p) it holds that 0 < Rpower (INR n + 1) p.
+    By Rinv_le_contravar it holds that
+      / (INR n + 1) ≤ / Rpower (INR n + 1) p.
+    We conclude that 1 / (INR n + 1) ≤ 1 / Rpower (INR n + 1) p.
+  }
+  We claim that
+    ∃ l ∈ ℝ, partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ l as (Hb).
+  {
+    Choose l := L. { Indeed, l ∈ ℝ. }
+    We conclude that partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ l.
+  }
+  By (series_comparison_test (fun k => 1 / (INR k + 1))
+      (fun k => 1 / Rpower (INR k + 1) p) Hpos Hcomp Hb) it holds that
+    ∃ l ∈ ℝ, partial_sums (fun k => 1 / (INR k + 1)) ⟶ l as (Hharm).
+  Obtain l according to (Hharm).
+  It holds that partial_sums (fun k => 1 / (INR k + 1)) ⟶ l as (Hl).
+  We claim that ∃ L0 : ℝ, partial_sums (fun k => 1 / (INR k + 1)) ⟶ L0
+    as (Hharm').
+  {
+    Choose L0 := l.
+    We conclude that partial_sums (fun k => 1 / (INR k + 1)) ⟶ L0.
+  }
+  By harmonic_series_diverges it holds that
+    ¬ (∃ L0 : ℝ, partial_sums (fun k => 1 / (INR k + 1)) ⟶ L0).
+  Contradiction.
+Qed.
+
 (** _The p-series_: the series [∑ 1/kᵖ] converges iff [p > 1].
 
-    Proof idea: this follows from the integral test ([integral_test], in
-    [Analysis.Integration]) by comparison with [∫ 1/xᵖ dx], which is finite iff
-    [p > 1]. (Terms indexed as [1/(k+1)ᵖ]; real exponentiation is [Rpower].) *)
+    Proof idea: combine [p_series_diverges] ([p ≤ 1]) and
+    [p_series_converges] ([p > 1]). (Terms indexed as [1/(k+1)ᵖ]; real
+    exponentiation is [Rpower].) *)
 Lemma p_series (p : ℝ) :
     (∃ L : ℝ, partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ L) ⇔ p > 1.
 Proof.
-  (* Depends on the integral test ([integral_test] in [Analysis.Integration]),
-     which is itself still open. *)
-  Admitted.
+  We show both directions.
+  - We need to show that
+      (∃ L : ℝ, partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ L) ⇨ p > 1.
+    Assume that
+      ∃ L : ℝ, partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ L as (Hcv).
+    We argue by contradiction.
+    Assume that ¬ (p > 1).
+    It holds that p ≤ 1 as (Hp).
+    By (p_series_diverges p Hp) it holds that
+      ¬ (∃ L : ℝ, partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ L).
+    Contradiction.
+  - We need to show that
+      p > 1 ⇨ (∃ L : ℝ, partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ L).
+    Assume that p > 1 as (Hp).
+    By (p_series_converges p Hp) we conclude that
+      ∃ L : ℝ, partial_sums (fun k => 1 / Rpower (INR k + 1) p) ⟶ L.
+Qed.
