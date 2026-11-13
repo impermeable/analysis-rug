@@ -9,6 +9,11 @@
 (source
  (github impermeable/analysis-rug))
 
+(license LGPL-2.1-or-later)
+
+(maintainers "Marcello Seri <marcello.seri@gmail.com>")
+(authors "Marcello Seri" "Fionn Donoghue")
+
 (package
  (name waterproof-rug)
  (synopsis "Formalized RUG real analysis class from with Waterproof")
