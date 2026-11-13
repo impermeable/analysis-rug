@@ -20,9 +20,13 @@ Open Scope subset_scope.
 Set Default Goal Selector "!".
 
 Notation "'max(' x , y )" := (Rmax x y)
-  (format "'max(' x ,  y ')'").
+  (format "'max(' x ,  y ')'") : R_scope.
 Notation "'min(' x , y )" := (Rmin x y)
-  (format "'min(' x ,  y ')'").
+  (format "'min(' x ,  y ')'") : R_scope.
+Notation "'max(' x , y )" := (Nat.max x y)
+  (format "'max(' x ,  y ')'") : nat_scope.
+Notation "'min(' x , y )" := (Nat.min x y)
+  (format "'min(' x ,  y ')'") : nat_scope.
 
 Waterproof Register Expand "⟶";
   for converges_to;
@@ -660,21 +664,21 @@ Proof.
   We need to show that ∀ ε > 0, ∃ N1 ∈ ℕ, ∀ n ≥ N1, Rabs (ac(n) - (α * p)) < ε.
   Take ε > 0.
   By Rdiv_lt_0_compat and (i) it holds that ε / α > 0.
-  (* We can also use ∣, obtained with \abs, instead of Rabs: *)
-  By (ii) it holds that ∃ Na ∈ ℕ, ∀ n ≥ Na, ｜a(n) - p｜ < ε/α as (iii).
+  (* We can also write |x| instead of Rabs x: *)
+  By (ii) it holds that ∃ Na ∈ ℕ, ∀ n ≥ Na, |a(n) - p| < ε/α as (iii).
   Obtain such a Na.
   Choose N1 := Na.
   - Indeed, N1 ∈ ℕ.
-  - We need to show that ∀ n ≥ N1, ｜ac(n) - (α * p)｜ < ε.
+  - We need to show that ∀ n ≥ N1, |ac(n) - (α * p)| < ε.
     Take n ≥ N1.
     By (i) and (iii) it holds that (&
-      ｜ac(n) - (α * p)｜
-      = ｜(α * a(n)) - (α * p)｜
-      = α * ｜a(n) - p｜
+      |ac(n) - (α * p)|
+      = |(α * a(n)) - (α * p)|
+      = α * |a(n) - p|
       < α * (ε/α)
       = ε
     ).
-    We conclude that ｜ac(n) - (α * p)｜ < ε.
+    We conclude that |ac(n) - (α * p)| < ε.
 Qed.
 ```
 
