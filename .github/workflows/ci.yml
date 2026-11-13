@@ -35,7 +35,7 @@ jobs:
         with:
           ocaml-compiler: 5
 
-      - run: opam install . --deps-only
+      - run: opam install . --deps-only --with-doc
 
       - name: Regenerate docs
         run: opam exec -- dune build @doc
