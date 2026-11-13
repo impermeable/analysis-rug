@@ -4,10 +4,13 @@
 
 (generate_opam_files true)
 
-(name waterproof-analysis)
+(name waterproof-rug)
+
+(source
+ (github impermeable/analysis-rug))
 
 (package
- (name waterproof-analysis)
- (synopsis "Formalized real analysis with Waterproof")
+ (name waterproof-rug)
+ (synopsis "Formalized RUG real analysis class from with Waterproof")
  (authors "Fionn Donoghue" "Marcello Seri")
  (depends rocq-core rocq-stdlib (rocq-waterproof (>= 3.1.1+9.1))))

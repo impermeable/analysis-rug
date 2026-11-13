@@ -3,7 +3,7 @@
 
 (rocq.theory
  (name RUG.Analysis)
- (package waterproof-analysis)
+ (package waterproof-rug)
  (synopsis "Undergraduate real analysis formalized in Waterproof")
  (theories Stdlib Ltac2 Waterproof)
  (plugins
