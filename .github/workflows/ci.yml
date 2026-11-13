@@ -1,0 +1,50 @@
+name: Builds, tests & co
+
+on:
+  - push
+  - pull_request
+
+permissions: read-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout tree
+        uses: actions/checkout@v6
+
+      - name: Set-up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 5
+
+      - run: opam install . --deps-only
+
+      - name: Build theories
+        run: opam exec -- dune build theories/
+
+  docs-up-to-date:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tree
+        uses: actions/checkout@v6
+
+      - name: Set-up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 5
+
+      - run: opam install . --deps-only
+
+      - name: Regenerate docs
+        run: opam exec -- dune build @doc
+
+      - name: Check that docs/ is up to date
+        run: |
+          if [ -n "$(git status --porcelain -- docs)" ]; then
+            echo "::error::docs/ is out of date. Run 'dune build @doc' and commit the result."
+            git status --short -- docs
+            git diff --stat -- docs
+            exit 1
+          fi
