@@ -258,6 +258,7 @@
       transition: background 0.12s, color 0.12s;
     }
     .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    a.nav-item { text-decoration: none; }
     .nav-item.active {
       background: rgba(255,255,255,0.09);
       border-left-color: #5aabdc;
@@ -521,6 +522,12 @@
     <button class="nav-item" data-file="tutorials.yaml" data-mode="doc" data-slug="tutorials">Tutorials</button>
     <div class="nav-section">Lectures</div>
     <!-- populated by JS -->
+    <div class="nav-section" id="waterproof-section">Waterproof</div>
+    <a class="nav-item" href="tutorial.mv" download>Tutorial</a>
+    <a class="nav-item" href="exercises/hw1_infimum.mv" download>Homework 1 — Infimum</a>
+    <a class="nav-item" href="exercises/hw2_series_ratio.mv" download>Homework 2 — Comparison of series</a>
+    <a class="nav-item" href="exercises/hw3_limit_point.mv" download>Homework 3 — Limit points</a>
+    <a class="nav-item" href="exercises/hw4_uniform_convergence.mv" download>Homework 4 — Uniform convergence</a>
   </div>
 </div>
 
@@ -676,13 +683,14 @@
   });
 
   // ── Build lecture nav items ───────────────────────────────────────
+  const waterproofSection = document.getElementById('waterproof-section');
   for (let i = 1; i <= LECTURE_COUNT; i++) {
     const btn = document.createElement('button');
     btn.className   = 'nav-item';
     btn.dataset.file = 'md/Analysis-lecture' + String(i).padStart(2, '0') + '.md';
     btn.dataset.mode = 'slides';
     btn.textContent  = 'Lecture ' + i;
-    navBody.appendChild(btn);
+    navBody.insertBefore(btn, waterproofSection);
   }
 
   // ── Menu open / close ─────────────────────────────────────────────
@@ -1189,6 +1197,7 @@
   // ── Item selection + hash routing (#lecture05, #course-info, #tutorials/tutorial-5, …) ──
   function slugFor(item) {
     if (item.dataset.slug) return item.dataset.slug;
+    if (!item.dataset.file) return null;
     var m = item.dataset.file.match(/Analysis-(lecture\d+|course-info|final-exam-info)\.md$/);
     return m ? m[1] : null;
   }
